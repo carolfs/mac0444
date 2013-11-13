@@ -1,59 +1,93 @@
-turtles-own [ea eb x]
+turtles-own [ps es x temp1 temp2]
 
 to setup
   clear-all
   ask patches
-  [ if random-float 100 < 60
-    [ set pcolor 40 + random-float 10 ] ]
-  create-turtles 1 [
+  [ ifelse random-float 1 < 0.5
+    [ set pcolor 40 ]
+    [ set pcolor 40 + random-float 10 ]
+  ]
+  create-turtles num-turtles [
     set color white
     setxy random-pxcor random-pycor
     set size 0.5  ;; easier to see
-    set ea 0
-    set eb 0
+    set ps []
+    set ps lput patch-here ps
+    set es []
+    set es lput 0 es
   ]
+  reset-ticks
 end
 
 to go
-  ; atualiza estimativa
-  ifelse xcor = 0
-  [ set ea (0.427 * ea + (1 - 0.427) * pcolor) ]
-  [ set eb (0.427 * eb + (1 - 0.427) * pcolor) ]
-  
-  set x random-float 1
-  ifelse x < 0.052
-  [ setxy 1 - xcor 0 ]
-  [ ifelse xcor = 0
-    [ if eb > ea [ set xcor 1 ] ]
-    [ if ea > eb [ set xcor 0 ] ]
+  ask turtles [
+    ; atualiza estimativa
+    set es replace-item (length es - 1) es (0.427 * (last es) + (1 - 0.427) * (pcolor - 40))
+    set x random-float 1
+    ifelse x < 0.052 [
+      rt random-float 360
+      fd random 3
+      ;setxy (1 - xcor) ycor
+    ]
+    [
+      set temp1 patch-here
+      set temp2 (last es)
+      foreach ps [
+        if distance ? <= 3 and (item (position ? ps) es) > temp2 [
+          set temp1 ?
+          set temp2 (item (position ? ps) es)
+        ]
+      ]
+      move-to temp1
+    ]
+    foreach ps [
+      if ? = patch-here [
+        set es lput (item (position ? ps) es) es
+        set es remove-item (position ? ps) es
+        set ps lput ? ps
+        set ps remove-item (position ? ps) ps
+      ]
+    ]
+    if not (member? patch-here ps) [
+      set ps lput patch-here ps
+      set es lput 0 es
+      if (length ps) > 5 [
+        set ps remove-item 0 ps
+        set es remove-item 0 es
+      ]
+    ]
+    ;show ps
+    ;show es
+    ;show patch-here
   ]
+  tick-advance 1
+  if ticks = max-time [stop]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
-200
-10
-1010
-441
+365
+15
+775
+446
 -1
-0
-400.0
+-1
+20.0
 1
 10
 1
 1
 1
 0
+1
+1
+1
+0
+19
+0
+19
 0
 0
 1
-0
-1
-0
-0
-0
-0
-0
 ticks
 30.0
 
@@ -67,7 +101,7 @@ go
 T
 1
 T
-TURTLE
+OBSERVER
 NIL
 NIL
 NIL
@@ -90,6 +124,36 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+25
+35
+197
+68
+num-turtles
+num-turtles
+1
+300
+300
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+25
+80
+197
+113
+max-time
+max-time
+1
+500
+500
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 @#$#@#$#@
