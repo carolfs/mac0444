@@ -1,11 +1,22 @@
 turtles-own [ps es x temp1 temp2]
+globals [temp c]
 
 to setup
   clear-all
   ask patches
-  [ ifelse random-float 1 < 0.5
-    [ set pcolor 40 ]
-    [ set pcolor 40 + random-float 10 ]
+  [
+    ;ifelse random-float 1 < 0.5
+    ;[ set pcolor 40 ]
+    ;[ set pcolor 40 + random-float 10 ]
+  ]
+  foreach [1 2 3] [
+      set temp (one-of patches)
+      
+      ask patches [
+        set c exp (-0.2 * (distance temp) * (distance temp)) * 6 + random-float 1
+        set c 40 + c / 7 * 9.9
+        if c > pcolor [ set pcolor c ]
+      ]
   ]
   create-turtles num-turtles [
     set color white
@@ -61,7 +72,18 @@ to go
     ;show patch-here
   ]
   tick-advance 1
-  if ticks = max-time [stop]
+  if ticks = max-time [
+    set temp 0
+    ask patches [
+      if count turtles-here > temp
+      [ set temp count turtles-here]
+    ]
+    ask patches [
+      set pcolor 30 + (count turtles-here) / temp * 9.9
+    ]
+    clear-turtles 
+    stop
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -446,6 +468,19 @@ setup
 ask turtles [ repeat 150 [ go ] ]
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="max-time">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="num-turtles">
+      <value value="300"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
